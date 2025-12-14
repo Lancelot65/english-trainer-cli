@@ -1,4 +1,5 @@
-"""Modern UI components using Rich library."""
+# Legacy backup removed: this file is deprecated and intentionally left empty.
+# To fully remove it from the repository, delete the file.
 
 from typing import List, Dict, Any
 
@@ -29,15 +30,8 @@ class ModernUI:
             "info": "#00BCD4",  # Cyan
             "dark": "#212121",  # Dark gray
             "light": "#FFFFFF",  # White
+            "streak": "#FF5722",  # Orange (for streak display)
         }
-
-    def update_theme(self, custom: Dict[str, str]) -> None:
-        """Merge a user-provided custom theme into the base theme."""
-        if not isinstance(custom, dict):
-            return
-        for k, v in custom.items():
-            if k in self.theme and isinstance(v, str) and v:
-                self.theme[k] = v
 
     def clear(self) -> None:
         """Clear the console."""
@@ -45,13 +39,6 @@ class ModernUI:
 
     def header(self, state: TrainerState) -> None:
         """Display compact header with progress."""
-        # Apply any custom theme overrides from state
-        try:
-            self.update_theme(state.settings.custom_theme)
-        except (AttributeError, TypeError):
-            # Ignore if settings/custom_theme is missing or malformed
-            pass
-
         self.clear()
 
         # Compact header on two lines
@@ -60,17 +47,11 @@ class ModernUI:
         theme = state.current_theme or "Aucun"
 
         # Line 1: Title and level
-        line1 = (
-            f"[bold {self.theme['primary']}]ENGLISH TRAINER v7.0[/] • "
-            f"[dim]{state.level_name}[/]"
-        )
+        line1 = f"[bold {self.theme['primary']}]ENGLISH TRAINER v7.0[/] • [dim]{state.level_name}[/]"
 
         # Line 2: Progress, XP, focus and theme
-        line2 = (
-            f"{progress_bar} [dim]XP: {state.xp}[/] • "
-            f"[bold {self.theme['accent']}]Focus: {focus}[/] • "
-            f"[bold {self.theme['secondary']}]Thème: {theme}[/]"
-        )
+        streak_display = f"🔥 {state.streak}" if state.streak > 0 else ""
+        line2 = f"{progress_bar} [dim]XP: {state.xp}[/] • [bold {self.theme['accent']}]Focus: {focus}[/] • [bold {self.theme['secondary']}]Thème: {theme}[/] {streak_display}"
 
         self.console.print(line1)
         self.console.print(line2)
@@ -80,9 +61,9 @@ class ModernUI:
         """Create a visual progress bar."""
         bar_length = 30
         filled = int(bar_length * progress)
-        bar_visual = "█" * filled + "░" * (bar_length - filled)
+        bar = "█" * filled + "░" * (bar_length - filled)
         percentage = int(progress * 100)
-        return Text(f"[{bar_visual}] {percentage}%", style=self.theme["success"])
+        return Text(f"[{bar}] {percentage}%", style=self.theme["success"])
 
     def main_menu(
         self,
@@ -98,7 +79,7 @@ class ModernUI:
                 ("c", "Choisir leçon", self.theme["secondary"]),
                 ("t", "Choisir thème", self.theme["accent"]),
                 ("e", "Cours interactif", self.theme["success"]),
-                ("d", "Défi quotidien", self.theme["secondary"]),
+                ("d", "Défi quotidien", self.theme["streak"]),
             ]
 
             if has_notebook:
@@ -133,8 +114,7 @@ class ModernUI:
             )
         else:
             # When help is not requested, do not show the command banner (keeps UI minimal)
-            # intentionally no output when help is disabled
-            pass
+            return
 
     def lesson_menu(
         self, curriculum: Dict[str, List[str]], current_lesson: str
@@ -356,6 +336,7 @@ class ModernUI:
         stats.add_row("📈 Performance récente", f"{recent_avg:.1f}/10")
         stats.add_row("🔁 Révisions en attente", f"{due_reviews}/{total_reviews}")
         stats.add_row("📘 Entrées cahier", str(len(state.notebook)))
+        stats.add_row("🔥 Streak actuel", str(state.streak))
         stats.add_row(
             "🎯 Défis quotidiens", f"{completed_challenges}/{total_challenges}"
         )
@@ -431,7 +412,7 @@ class ModernUI:
             Panel(
                 content,
                 title="[bold]🎯 Défi Quotidien[/]",
-                border_style=self.theme["secondary"],
+                border_style=self.theme["streak"],
                 padding=(1, 2),
                 box=ROUNDED,
             )
@@ -458,3 +439,9 @@ class ModernUI:
     def info(self, message: str) -> None:
         """Display info message."""
         self.console.print(f"[{self.theme['muted']}]ℹ️  {message}[/]")
+
+    def prompt_continue(
+        self, message: str = "Appuyez sur Entrée pour continuer..."
+    ) -> None:
+        """Display continue prompt."""
+        self.console.print(f"\n[{self.theme['muted']}] {message}[/]")

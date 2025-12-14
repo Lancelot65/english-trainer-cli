@@ -6,7 +6,6 @@ Simple launcher with dependency checking and setup.
 
 import sys
 import subprocess
-from pathlib import Path
 
 
 def check_python_version():

@@ -1,7 +1,6 @@
 """Main application controller for English Trainer."""
 
 import time
-from typing import Dict, List, Optional
 from datetime import datetime
 
 from .config import config
@@ -15,7 +14,7 @@ from .services import (
     review_service,
     daily_challenge_service,
 )
-from .achievements import achievement_service
+
 from ..data.curriculum import Curriculum, Themes
 from ..data.storage import storage
 from ..ui.components import ModernUI
@@ -44,13 +43,6 @@ class EnglishTrainerApp:
             self.ui.info("English Trainer v7.0 - Chargé avec succès!")
 
             while self.running:
-                # Check for new achievements
-                new_achievements = achievement_service.check_achievements(self.state)
-                if new_achievements:
-                    for achievement in new_achievements:
-                        self.ui.success(f"🏆 Nouveau succès débloqué: {achievement}")
-                    storage.save_state(self.state)
-                
                 self._main_menu_loop()
 
             storage.save_state(self.state)
@@ -149,9 +141,37 @@ class EnglishTrainerApp:
         self.ui.theme_menu(Themes.AVAILABLE, self.state.current_theme)
 
         mapping = {str(i): theme for i, theme in enumerate(Themes.AVAILABLE, 1)}
-        choice = self.input_handler.prompt("Choix # : ")
+        # Allow a quick custom theme setup by entering 'c'
+        print("C. Personnaliser le thème")
+        choice = self.input_handler.prompt("Choix # ou 'C' pour personnaliser : ")
 
-        if choice in mapping:
+        if choice is None:
+            return
+
+        if choice.lower() == "c":
+            # Simple customization: prompt for common color keys
+            keys = [
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "error",
+                "muted",
+                "accent",
+                "info",
+                "streak",
+                "dark",
+                "light",
+            ]
+            for key in keys:
+                val = self.input_handler.prompt(
+                    f"Couleur {key} (hex, vide pour ignorer) : "
+                )
+                if val and val.strip():
+                    self.state.settings.custom_theme[key] = val.strip()
+            storage.save_state(self.state)
+            self.ui.success("Thème personnalisé enregistré !")
+        elif choice in mapping:
             selected_theme = mapping[choice]
             if selected_theme.startswith("Aléatoire"):
                 self.state.current_theme = ""
@@ -206,12 +226,6 @@ class EnglishTrainerApp:
 
             # Add to review if needed
             review_service.add_to_review(self.state, french_text, score)
-            
-            # Check for new achievements
-            new_achievements = achievement_service.check_achievements(self.state)
-            if new_achievements:
-                for achievement in new_achievements:
-                    self.ui.success(f"🏆 Nouveau succès débloqué: {achievement}")
 
             self.ui.feedback_display(evaluation)
             storage.save_state(self.state)
@@ -252,12 +266,7 @@ class EnglishTrainerApp:
                     self.state, title, lesson_content, topic, tags
                 )
                 self.ui.success("Cours sauvegardé dans le cahier!")
-                
-                # Check for achievements
-                new_achievements = achievement_service.check_achievements(self.state)
-                if new_achievements:
-                    for achievement in new_achievements:
-                        self.ui.success(f"🏆 Nouveau succès débloqué: {achievement}")
+
                 storage.save_state(self.state)
 
             # Interactive Q&A
@@ -301,7 +310,6 @@ class EnglishTrainerApp:
             print("3. Filtrer par sujet")
             print("4. Marquer/démarquer favori")
             print("5. Supprimer une entrée")
-            print("6. Voir les succès")
             print("0. Retour")
 
             choice = self.input_handler.prompt("Choix : ")
@@ -318,8 +326,6 @@ class EnglishTrainerApp:
                 self._toggle_notebook_favorite()
             elif choice == "5":
                 self._delete_notebook_entry()
-            elif choice == "6":
-                self._show_achievements()
 
     def _show_all_notebook_entries(self) -> None:
         """Show all notebook entries."""
@@ -410,12 +416,6 @@ class EnglishTrainerApp:
 
                 # Update review schedule
                 review_service.process_review_result(self.state, review_item, score)
-                
-                # Check for achievements
-                new_achievements = achievement_service.check_achievements(self.state)
-                if new_achievements:
-                    for achievement in new_achievements:
-                        self.ui.success(f"🏆 Nouveau succès débloqué: {achievement}")
 
                 if score >= 8:
                     self.ui.success(
@@ -500,7 +500,7 @@ class EnglishTrainerApp:
     def _daily_challenge(self) -> None:
         """Handle daily challenge."""
         today = datetime.now().strftime("%Y-%m-%d")
-        
+
         # Get or create today's challenge
         challenge = self.state.today_challenge
         if not challenge:
@@ -515,20 +515,20 @@ class EnglishTrainerApp:
                 instructions=challenge_data["instructions"],
                 example=challenge_data["example"],
                 tips=challenge_data.get("tips", []),
-                xp_reward=challenge_data.get("xp_reward", 10)
+                xp_reward=challenge_data.get("xp_reward", 10),
             )
             self.state.add_daily_challenge(challenge)
             storage.save_state(self.state)
-        
+
         # Display challenge
         self.ui.daily_challenge_display(challenge)
-        
+
         # If not completed, allow user to attempt it
         if not challenge.completed:
             if self.input_handler.confirm("Voulez-vous relever ce défi ?"):
                 self.ui.info(challenge.instructions)
                 self.ui.info(f"Exemple: {challenge.example}")
-                
+
                 # Challenge-specific handling based on type
                 if challenge.challenge_type == "translation":
                     user_input = self.input_handler.prompt("Votre traduction : ")
@@ -536,31 +536,21 @@ class EnglishTrainerApp:
                     user_input = self.input_handler.prompt_multiline("Votre texte : ")
                 else:
                     user_input = self.input_handler.prompt("Votre réponse : ")
-                
+
                 if user_input and user_input.lower() != "q":
                     # For now, we'll just mark it as completed
                     # In a more advanced version, we could evaluate the response
                     if self.state.complete_today_challenge():
-                        self.ui.success(f"Défi relevé ! Vous gagnez {challenge.xp_reward} XP !")
-                        
-                        # Check for achievements
-                        new_achievements = achievement_service.check_achievements(self.state)
-                        if new_achievements:
-                            for achievement in new_achievements:
-                                self.ui.success(f"🏆 Nouveau succès débloqué: {achievement}")
-                        
+                        self.ui.success(
+                            f"Défi relevé ! Vous gagnez {challenge.xp_reward} XP !"
+                        )
+
                         self.ui.header(self.state)  # Update header to show new XP
                     else:
                         self.ui.info("Défi déjà complété.")
         else:
             self.ui.success("Vous avez déjà relevé aujourd'hui !")
-        
-        self.input_handler.prompt()
 
-    def _show_achievements(self) -> None:
-        """Show user achievements."""
-        self.ui.clear()
-        self.ui.achievements_display(self.state.achievements)
         self.input_handler.prompt()
 
 

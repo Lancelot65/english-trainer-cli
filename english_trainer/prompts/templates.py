@@ -1,11 +1,13 @@
 """Optimized prompt templates for AI interactions."""
+# Pylint: these templates are intentionally long and descriptive
+# pylint: disable=line-too-long,too-many-arguments,too-many-positional-arguments
 
-from typing import Dict, Any
+from typing import Optional
 
 
 class PromptTemplates:
     """Collection of optimized prompt templates."""
-    
+
     EXERCISE_GENERATOR = """You are an expert English teacher creating translation exercises for French speakers learning English.
 
 IMPORTANT INSTRUCTIONS:
@@ -27,6 +29,12 @@ REQUIREMENTS FOR THE EXERCISE:
 - Use contemporary, everyday language that a French speaker would encounter
 - Include cultural references relevant to French speakers when appropriate
 
+REPETITION AVOIDANCE:
+{avoid_phrases_section}
+
+ERROR ADDRESSING:
+{error_addressing_section}
+
 QUALITY STANDARDS:
 - Authentic French expression that sounds natural to native French speakers
 - Clear translation challenge that focuses on the target grammar/vocabulary
@@ -41,6 +49,8 @@ FINAL CHECKLIST BEFORE RESPONDING:
 3. Is the French text authentic and natural?
 4. Does it match the requested level and focus?
 5. Is it culturally appropriate for French speakers?
+6. Have I avoided the recently used phrases?
+7. Am I addressing common user errors?
 
 REMEMBER: Respond with ONLY the JSON object, nothing else."""
 
@@ -291,42 +301,67 @@ FINAL CHECKLIST:
         cls,
         level: str,
         focus: str = "",
-        theme: str = ""
+        theme: str = "",
+        avoid_phrases: "Optional[list]" = None,
+        common_errors: "Optional[list]" = None,
     ) -> str:
         """Get exercise generation prompt with parameters."""
-        focus_instruction = f"GRAMMAR FOCUS: Use '{focus}' specifically" if focus else "FOCUS: Mixed grammar (various tenses and structures)"
-        theme_instruction = f"THEME: {theme} context" if theme else "THEME: General/everyday situations"
-        
+        focus_instruction = (
+            f"GRAMMAR FOCUS: Use '{focus}' specifically"
+            if focus
+            else "FOCUS: Mixed grammar (various tenses and structures)"
+        )
+        theme_instruction = (
+            f"THEME: {theme} context" if theme else "THEME: General/everyday situations"
+        )
+
+        # Create avoid phrases section
+        avoid_phrases_section = (
+            "NO RECENTLY USED PHRASES: Avoid these recently used phrases:"
+        )
+        if avoid_phrases:
+            for phrase in avoid_phrases[-10:]:  # Last 10 phrases
+                avoid_phrases_section += f'\n- "{phrase}"'
+        else:
+            avoid_phrases_section += "\n(None provided)"
+
+        # Create error addressing section
+        error_addressing_section = (
+            "ADDRESS COMMON ERRORS: Focus on helping with these common user errors:"
+        )
+        if common_errors:
+            for error in common_errors[:5]:  # Top 5 errors
+                error_addressing_section += f"\n- {error}"
+        else:
+            error_addressing_section += "\n(None provided)"
+
         return cls.EXERCISE_GENERATOR.format(
             level=level,
             focus_instruction=focus_instruction,
-            theme_instruction=theme_instruction
+            theme_instruction=theme_instruction,
+            avoid_phrases_section=avoid_phrases_section,
+            error_addressing_section=error_addressing_section,
         )
-    
+
     @classmethod
-    def get_evaluation_prompt(
-        cls,
-        french_text: str,
-        student_translation: str
-    ) -> str:
+    def get_evaluation_prompt(cls, french_text: str, student_translation: str) -> str:
         """Get translation evaluation prompt with texts."""
         return cls.TRANSLATION_EVALUATOR.format(
-            french_text=french_text,
-            student_translation=student_translation
+            french_text=french_text, student_translation=student_translation
         )
-    
+
     @classmethod
     def get_lesson_prompt(cls, topic: str, level: str = "") -> str:
         """Get lesson teaching prompt."""
         level_context = f"\nSTUDENT LEVEL: {level}" if level else ""
         return f"{cls.LESSON_TEACHER}\n\nTOPIC: {topic}{level_context}\n\nCreate a comprehensive lesson on this topic."
-    
+
     @classmethod
     def get_conversation_prompt(cls, context: str = "") -> str:
         """Get conversation partner prompt."""
         context_info = f"\nCONTEXT: {context}" if context else ""
         return f"{cls.CONVERSATION_PARTNER}{context_info}"
-    
+
     @classmethod
     def get_daily_challenge_prompt(cls) -> str:
         """Get daily challenge generation prompt."""

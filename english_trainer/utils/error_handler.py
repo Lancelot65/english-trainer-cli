@@ -3,10 +3,8 @@
 import logging
 import traceback
 from functools import wraps
-from typing import Callable, Any, Optional, Type
+from typing import Callable, Any, Optional
 from pathlib import Path
-
-from ..core.config import config
 
 
 class ErrorHandler:
@@ -51,35 +49,31 @@ class ErrorHandler:
 
         if "timeout" in error_str:
             return "⏱️ Délai d'attente dépassé. Vérifiez votre connexion et réessayez."
-        elif "connection" in error_str or "network" in error_str:
+        if "connection" in error_str or "network" in error_str:
             return "🌐 Problème de connexion. Vérifiez que votre serveur IA est accessible."
-        elif "unauthorized" in error_str or "401" in error_str:
+        if "unauthorized" in error_str or "401" in error_str:
             return "🔑 Erreur d'authentification. Vérifiez votre clé API."
-        elif "rate limit" in error_str or "429" in error_str:
-            return (
-                "🚦 Limite de taux atteinte. Attendez quelques secondes et réessayez."
-            )
-        elif "model" in error_str:
+        if "rate limit" in error_str or "429" in error_str:
+            return "🚦 Limite de taux atteinte. Attendez quelques secondes et réessayez."
+        if "model" in error_str:
             return "🤖 Modèle non disponible. Vérifiez le nom du modèle dans la configuration."
-        elif "json" in error_str:
+        if "json" in error_str:
             return "📄 Réponse IA malformée. Réessayez avec un prompt différent."
-        else:
-            return f"🔧 Erreur IA: {str(error)}"
+
+        return f"🔧 Erreur IA: {str(error)}"
 
     def handle_file_error(self, error: Exception) -> str:
         """Handle file-related errors."""
         error_str = str(error).lower()
 
         if "permission" in error_str:
-            return (
-                "🔒 Permissions insuffisantes. Vérifiez les droits d'accès au fichier."
-            )
-        elif "not found" in error_str:
+            return "🔒 Permissions insuffisantes. Vérifiez les droits d'accès au fichier."
+        if "not found" in error_str:
             return "📁 Fichier non trouvé. Le fichier sera créé automatiquement."
-        elif "disk" in error_str or "space" in error_str:
+        if "disk" in error_str or "space" in error_str:
             return "💾 Espace disque insuffisant. Libérez de l'espace et réessayez."
-        else:
-            return f"📄 Erreur fichier: {str(error)}"
+
+        return f"📄 Erreur fichier: {str(error)}"
 
     def handle_validation_error(self, error: Exception) -> str:
         """Handle validation errors."""
@@ -90,11 +84,20 @@ class ErrorHandler:
         error_str = str(error).lower()
 
         if "connection" in error_str:
-            return "💡 Suggestions:\n• Vérifiez que votre serveur IA est démarré\n• Testez l'URL avec curl\n• Vérifiez les variables d'environnement"
-        elif "timeout" in error_str:
-            return "💡 Suggestions:\n• Augmentez le timeout dans la configuration\n• Vérifiez la charge du serveur\n• Essayez un modèle plus rapide"
-        elif "json" in error_str:
-            return "💡 Suggestions:\n• Réessayez l'opération\n• Modifiez légèrement votre demande\n• Vérifiez les prompts système"
+            return (
+                "💡 Suggestions:\n• Vérifiez que votre serveur IA est démarré\n"
+                "• Testez l'URL avec curl\n• Vérifiez les variables d'environnement"
+            )
+        if "timeout" in error_str:
+            return (
+                "💡 Suggestions:\n• Augmentez le timeout dans la configuration\n"
+                "• Vérifiez la charge du serveur\n• Essayez un modèle plus rapide"
+            )
+        if "json" in error_str:
+            return (
+                "💡 Suggestions:\n• Réessayez l'opération\n• Modifiez légèrement votre demande\n"
+                "• Vérifiez les prompts système"
+            )
 
         return None
 
@@ -160,7 +163,6 @@ class RetryHandler:
                 last_exception = None
                 current_delay = delay
 
-                last_exception = None
                 for attempt in range(max_attempts):
                     try:
                         return func(*args, **kwargs)
@@ -174,12 +176,11 @@ class RetryHandler:
                             time.sleep(current_delay)
                             current_delay *= backoff_factor
                         else:
-                            raise last_exception
+                            raise last_exception from e
 
                 if last_exception is not None:
                     raise last_exception
-                else:
-                    raise RuntimeError("Retry failed without exception")
+                raise RuntimeError("Retry failed without exception")
 
             return wrapper
 
@@ -189,19 +190,16 @@ class RetryHandler:
 class ValidationError(Exception):
     """Custom validation error."""
 
-    pass
 
 
 class ConfigurationError(Exception):
     """Custom configuration error."""
 
-    pass
 
 
 class AIServiceError(Exception):
     """Custom AI service error."""
 
-    pass
 
 
 # Global error handler instance

@@ -2,27 +2,10 @@
 
 Une application moderne d'apprentissage de l'anglais pour les francophones, alimentée par l'intelligence artificielle.
 
-## 🌟 Nouvelles fonctionnalités
-
-### 🔥 Suivi de série (Streak)
-- Suivez votre progression quotidienne
-- Motivation pour pratiquer régulièrement
-- Affichage visible dans l'en-tête
 
 ### 🎯 Défis quotidiens
 - Un nouveau défi chaque jour
 - Variété de types d'activités (traduction, vocabulaire, grammaire)
-- Récompenses en XP pour maintenir la motivation
-
-### 📈 Améliorations de l'évaluation
-- Suggestions d'amélioration personnalisées
-- Feedback plus détaillé sur les erreurs
-- Meilleure reconnaissance des nuances linguistiques
-
-### 🎨 Interface utilisateur améliorée
-- Affichage plus clair des informations essentielles
-- Meilleure organisation des menus
-- Feedback visuel amélioré
 
 ## 🚀 Fonctionnalités principales
 
@@ -51,52 +34,50 @@ Une application moderne d'apprentissage de l'anglais pour les francophones, alim
 - Exemples contextualisés
 - Progression adaptative
 
-## 🛠 Optimisations techniques
+# English Trainer
 
-### ⚡ Performance
-- Mise en cache des prompts fréquents
-- Réduction des appels redondants à l'IA
-- Chargement plus rapide des contenus
+Petit outil CLI pour s'entraîner à l'anglais (pensé pour les francophones).
 
-### 🧠 Intelligence artificielle améliorée
-- Prompts optimisés pour de meilleurs résultats
-- Évaluations plus précises
-- Contenu plus engageant et pertinent
+But
+- Générer et évaluer des exercices de traduction et de conversation avec un backend LLM compatible OpenAI.
 
-### 🛡 Robustesse
-- Gestion améliorée des erreurs
-- Mécanismes de secours pour les appels IA
-- Sauvegarde automatique de la progression
+Quick start
+1. Pré-requis : Python 3.10+, Docker (optionnel)
+2. (Optionnel) Lancer un serveur LLM local compatible :
 
-## 🎮 Commandes principales
+```bash
+docker run -p 3000:3000 amirkabiri/duckai
+```
 
-- `⏎` - Nouvel exercice de traduction
-- `d` - Défi quotidien
-- `c` - Choisir une leçon (focus grammatical)
-- `t` - Choisir un thème
-- `e` - Cours interactif
-- `n` - Cahier de cours
-- `v` - Révisions
-- `s` - Statistiques
-- `conv` - Pratique conversationnelle
-- `vocab` - Entraînement au vocabulaire
-- `h` - Aide
-- `q` - Quitter
+3. Exporter les variables d'environnement si besoin (valeurs par défaut utilisées sinon) :
 
-## ⚙️ Configuration
+```bash
+export ENGLISH_RPG_BASE_URL="http://localhost:3000/v1"
+export ENGLISH_RPG_API_KEY="dummy-key"
+```
 
-L'application utilise les variables d'environnement suivantes :
+4. Lancer l'application :
 
-- `ENGLISH_RPG_BASE_URL` - URL de l'API LLM (défaut: http://localhost:3000/v1)
-- `ENGLISH_RPG_API_KEY` - Clé d'API (défaut: dummy-key)
-- `ENGLISH_RPG_MODEL` - Modèle à utiliser (défaut: gpt-4o-mini)
+```bash
+python run.py
+```
 
-## 📊 Suivi de la progression
+Fonctionnalités principales
+- Génération d'exercices de traduction
+- Évaluation instantanée avec feedback
+- Pratique conversationnelle simulée
+- Sauvegarde simple des leçons
 
-- Système de niveaux (A1 à C2)
-- Points d'expérience (XP)
-- Statistiques détaillées
-- Graphiques de progression
-- Suivi des succès
+Configuration minimale
+- `ENGLISH_RPG_BASE_URL` : URL du serveur LLM (défaut `http://localhost:3000/v1`)
+- `ENGLISH_RPG_API_KEY` : clé API (défaut `dummy-key`)
 
-Commencez dès maintenant votre voyage vers la maîtrise de l'anglais !
+Démarrage rapide du serveur LLM
+- Image recommandée : `amirkabiri/duckai`
+- Repo : https://github.com/amirkabiri/duckai
+
+Contribuer
+- Ouvrez une issue ou une PR pour proposer des améliorations.
+
+Licence
+- Projet personnel — voir les fichiers du dépôt pour plus d'informations.
