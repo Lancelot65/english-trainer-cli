@@ -1,0 +1,13 @@
+# English Trainer v7.0 - Dependencies
+# Core dependencies
+openai>=1.0.0
+rich>=13.0.0
+prompt_toolkit>=3.0.0
+
+# Optional dependencies for development
+types-requests
+mypy
+ruff
+ 
+# Runtime dependencies
+python-dotenv
